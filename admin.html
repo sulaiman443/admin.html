@@ -1,175 +1,100 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <title>إدارة البث المباشر | MATCHFAV</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap');
-        body { font-family: 'Cairo', sans-serif; background: #050810; color: white; }
-        .input-group input, .input-group select { 
-            background: #111827; border: 1px solid #1f2937; color: white; 
-            border-radius: 12px; padding: 12px; width: 100%; outline: none; transition: 0.3s;
+<script>
+    // --- نظام الحماية بكلمة مرور ---
+    const ADMIN_PASSWORD = "123"; // قم بتغيير كلمة المرور هنا
+    
+    function checkAuth() {
+        const pass = prompt("الرجاء إدخال كلمة مرور الإدارة:");
+        if (pass !== ADMIN_PASSWORD) {
+            alert("كلمة مرور خاطئة! سيتم توجيهك للصفحة الرئيسية.");
+            window.location.href = "index.html";
         }
-        .input-group input:focus { border-color: #2563eb; box-shadow: 0 0 10px rgba(37, 99, 235, 0.2); }
-        .match-card { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); transition: 0.3s; }
-        .match-card:hover { border-color: #2563eb; }
-    </style>
-</head>
-<body class="p-4 md:p-8">
-    <div class="max-w-5xl mx-auto">
+    }
+
+    // استدعاء الحماية عند فتح الصفحة
+    checkAuth();
+
+    // --- بقية كود الإدارة السابق ---
+    let matches = JSON.parse(localStorage.getItem('matches')) || [];
+
+    function render() {
+        const list = document.getElementById('admin-list');
+        document.getElementById('count').innerText = `${matches.length} مباراة`;
         
-        <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-10">
-            <div>
-                <h1 class="text-3xl font-black italic">CONTROL<span class="text-blue-600">PANEL</span></h1>
-                <p class="text-gray-500 text-sm">إدارة روابط البث المباشر والمباريات</p>
-            </div>
-            <div class="flex gap-3">
-                <button onclick="clearAll()" class="bg-red-500/10 text-red-500 px-4 py-2 rounded-xl text-xs font-bold border border-red-500/20">مسح الكل</button>
-                <a href="index.html" target="_blank" class="bg-blue-600 px-6 py-2 rounded-xl font-bold text-sm shadow-lg shadow-blue-600/20">فتح الموقع الرئيسي <i class="fas fa-external-link-alt mr-2"></i></a>
-            </div>
-        </div>
-
-        <div class="grid lg:grid-cols-3 gap-8">
-            <div class="lg:col-span-1 space-y-6">
-                <div class="bg-gray-900/40 p-6 rounded-[2rem] border border-white/5 shadow-xl">
-                    <h2 id="form-title" class="text-lg font-black mb-6 flex items-center gap-2">
-                        <i class="fas fa-tower-broadcast text-blue-500"></i> إضافة مباراة
-                    </h2>
-                    <div class="input-group space-y-4">
-                        <input type="hidden" id="edit-index" value="-1">
-                        <div>
-                            <label class="text-[10px] text-gray-500 font-bold uppercase mr-2">الفريق الأول</label>
-                            <input type="text" id="h-name" placeholder="مثال: ريال مدريد">
-                        </div>
-                        <input type="text" id="h-logo" placeholder="رابط شعار الفريق (اختياري)">
-                        
-                        <div class="py-2 border-t border-white/5"></div>
-                        
-                        <div>
-                            <label class="text-[10px] text-gray-500 font-bold uppercase mr-2">الفريق الثاني</label>
-                            <input type="text" id="a-name" placeholder="مثال: برشلونة">
-                        </div>
-                        <input type="text" id="a-logo" placeholder="رابط شعار الفريق (اختياري)">
-                        
-                        <div class="grid grid-cols-2 gap-2">
-                            <input type="text" id="m-time" placeholder="الوقت (21:00)">
-                            <select id="m-league">
-                                <option value="39">إنجليزي</option>
-                                <option value="140">إسباني</option>
-                                <option value="307">سعودي</option>
-                                <option value="233">مصري</option>
-                            </select>
-                        </div>
-                        
-                        <div>
-                            <label class="text-[10px] text-blue-500 font-bold uppercase mr-2">رابط البث المباشر (M3U8)</label>
-                            <input type="text" id="m-stream" placeholder="http://.../playlist.m3u8">
-                        </div>
-                        
-                        <button id="submit-btn" onclick="handleMatch()" class="w-full bg-blue-600 hover:bg-blue-700 py-4 rounded-2xl font-black transition-all shadow-lg shadow-blue-600/30">
-                            نشر المباراة الآن
-                        </button>
+        list.innerHTML = matches.map((m, i) => `
+            <div class="match-card p-5 rounded-[1.5rem] flex flex-wrap md:flex-nowrap justify-between items-center gap-4">
+                <div class="flex items-center gap-4 flex-1">
+                    <div class="flex -space-x-2">
+                        <img src="${m.h_logo || 'https://via.placeholder.com/40'}" class="w-10 h-10 rounded-full border-2 border-[#050810] bg-white/5 object-contain">
+                        <img src="${m.a_logo || 'https://via.placeholder.com/40'}" class="w-10 h-10 rounded-full border-2 border-[#050810] bg-white/5 object-contain">
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-sm">${m.h} <span class="text-gray-600 mx-1">×</span> ${m.a}</h3>
+                        <p class="text-[10px] text-blue-500 font-bold italic">${m.time} | ID: ${m.league}</p>
                     </div>
                 </div>
-            </div>
-
-            <div class="lg:col-span-2">
-                <div class="flex items-center justify-between mb-4 px-2">
-                    <h2 class="font-black italic text-gray-400 uppercase tracking-widest text-sm">المباريات النشطة حالياً</h2>
-                    <span id="count" class="bg-blue-600/20 text-blue-500 text-[10px] px-3 py-1 rounded-full font-bold">0 مباراة</span>
+                <div class="flex gap-2">
+                    <button onclick="editMatch(${i})" class="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-blue-500 hover:bg-blue-600 hover:text-white transition"><i class="fas fa-edit"></i></button>
+                    <button onclick="deleteMatch(${i})" class="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-red-500 hover:bg-red-600 hover:text-white transition"><i class="fas fa-trash-alt"></i></button>
                 </div>
-                <div id="admin-list" class="grid gap-4">
-                    </div>
             </div>
-        </div>
-    </div>
+        `).join('');
+        if(matches.length === 0) list.innerHTML = `<div class="text-center py-20 text-gray-700 font-bold italic border-2 border-dashed border-white/5 rounded-[2rem]">لا توجد مباريات منشورة.. ابدأ بإضافة مباراة جديدة</div>`;
+    }
 
-    <script>
-        let matches = JSON.parse(localStorage.getItem('matches')) || [];
+    function handleMatch() {
+        const index = parseInt(document.getElementById('edit-index').value);
+        const data = {
+            h: document.getElementById('h-name').value,
+            h_logo: document.getElementById('h-logo').value,
+            a: document.getElementById('a-name').value,
+            a_logo: document.getElementById('a-logo').value,
+            time: document.getElementById('m-time').value,
+            stream: document.getElementById('m-stream').value,
+            league: document.getElementById('m-league').value,
+            id: Date.now()
+        };
 
-        function render() {
-            const list = document.getElementById('admin-list');
-            document.getElementById('count').innerText = `${matches.length} مباراة`;
-            
-            list.innerHTML = matches.map((m, i) => `
-                <div class="match-card p-5 rounded-[1.5rem] flex flex-wrap md:flex-nowrap justify-between items-center gap-4">
-                    <div class="flex items-center gap-4 flex-1">
-                        <div class="flex -space-x-2">
-                            <img src="${m.h_logo || 'https://via.placeholder.com/40'}" class="w-10 h-10 rounded-full border-2 border-[#050810] bg-white/5 object-contain">
-                            <img src="${m.a_logo || 'https://via.placeholder.com/40'}" class="w-10 h-10 rounded-full border-2 border-[#050810] bg-white/5 object-contain">
-                        </div>
-                        <div>
-                            <h3 class="font-bold text-sm">${m.h} <span class="text-gray-600 mx-1">×</span> ${m.a}</h3>
-                            <p class="text-[10px] text-blue-500 font-bold italic">${m.time} | ID: ${m.league}</p>
-                        </div>
-                    </div>
-                    <div class="flex gap-2">
-                        <button onclick="editMatch(${i})" class="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-blue-500 hover:bg-blue-600 hover:text-white transition"><i class="fas fa-edit"></i></button>
-                        <button onclick="deleteMatch(${i})" class="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-red-500 hover:bg-red-600 hover:text-white transition"><i class="fas fa-trash-alt"></i></button>
-                    </div>
-                </div>
-            `).join('');
-            if(matches.length === 0) list.innerHTML = `<div class="text-center py-20 text-gray-700 font-bold italic border-2 border-dashed border-white/5 rounded-[2rem]">لا توجد مباريات منشورة.. ابدأ بإضافة مباراة جديدة</div>`;
-        }
+        if(!data.h || !data.a || !data.stream) return alert('برجاء إدخال أسماء الفرق ورابط البث');
 
-        function handleMatch() {
-            const index = parseInt(document.getElementById('edit-index').value);
-            const data = {
-                h: document.getElementById('h-name').value,
-                h_logo: document.getElementById('h-logo').value,
-                a: document.getElementById('a-name').value,
-                a_logo: document.getElementById('a-logo').value,
-                time: document.getElementById('m-time').value,
-                stream: document.getElementById('m-stream').value,
-                league: document.getElementById('m-league').value,
-                id: Date.now()
-            };
+        if(index === -1) matches.push(data);
+        else matches[index] = data;
 
-            if(!data.h || !data.a || !data.stream) return alert('برجاء إدخال أسماء الفرق ورابط البث');
+        localStorage.setItem('matches', JSON.stringify(matches));
+        resetForm();
+        render();
+    }
 
-            if(index === -1) matches.push(data);
-            else matches[index] = data;
+    function editMatch(i) {
+        const m = matches[i];
+        document.getElementById('h-name').value = m.h;
+        document.getElementById('h-logo').value = m.h_logo;
+        document.getElementById('a-name').value = m.a;
+        document.getElementById('a-logo').value = m.a_logo;
+        document.getElementById('m-time').value = m.time;
+        document.getElementById('m-stream').value = m.stream;
+        document.getElementById('m-league').value = m.league;
+        document.getElementById('edit-index').value = i;
+        document.getElementById('submit-btn').innerText = "تحديث البيانات";
+        document.getElementById('submit-btn').className = "w-full bg-orange-600 py-4 rounded-2xl font-black";
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
 
+    function deleteMatch(i) {
+        if(confirm('هل أنت متأكد من حذف هذه المباراة؟')) {
+            matches.splice(i, 1);
             localStorage.setItem('matches', JSON.stringify(matches));
-            resetForm();
             render();
         }
+    }
 
-        function editMatch(i) {
-            const m = matches[i];
-            document.getElementById('h-name').value = m.h;
-            document.getElementById('h-logo').value = m.h_logo;
-            document.getElementById('a-name').value = m.a;
-            document.getElementById('a-logo').value = m.a_logo;
-            document.getElementById('m-time').value = m.time;
-            document.getElementById('m-stream').value = m.stream;
-            document.getElementById('m-league').value = m.league;
-            document.getElementById('edit-index').value = i;
-            document.getElementById('submit-btn').innerText = "تحديث البيانات";
-            document.getElementById('submit-btn').className = "w-full bg-orange-600 py-4 rounded-2xl font-black";
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
+    function resetForm() {
+        document.getElementById('edit-index').value = "-1";
+        document.getElementById('submit-btn').innerText = "نشر المباراة الآن";
+        document.getElementById('submit-btn').className = "w-full bg-blue-600 py-4 rounded-2xl font-black";
+        ["h-name", "h-logo", "a-name", "a-logo", "m-time", "m-stream"].forEach(id => document.getElementById(id).value = "");
+    }
 
-        function deleteMatch(i) {
-            if(confirm('هل أنت متأكد من حذف هذه المباراة؟')) {
-                matches.splice(i, 1);
-                localStorage.setItem('matches', JSON.stringify(matches));
-                render();
-            }
-        }
+    function clearAll() { if(confirm('سيتم مسح جميع المباريات، هل أنت متأكد؟')) { localStorage.removeItem('matches'); matches = []; render(); } }
 
-        function resetForm() {
-            document.getElementById('edit-index').value = "-1";
-            document.getElementById('submit-btn').innerText = "نشر المباراة الآن";
-            document.getElementById('submit-btn').className = "w-full bg-blue-600 py-4 rounded-2xl font-black";
-            ["h-name", "h-logo", "a-name", "a-logo", "m-time", "m-stream"].forEach(id => document.getElementById(id).value = "");
-        }
-
-        function clearAll() { if(confirm('سيتم مسح جميع المباريات، هل أنت متأكد؟')) { localStorage.removeItem('matches'); matches = []; render(); } }
-
-        render();
-    </script>
-</body>
-</html>
+    render();
+</script>
